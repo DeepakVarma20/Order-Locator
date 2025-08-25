@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Locator</title>
+    <link rel="stylesheet" href="/static/map.css">
+    <style>
+        #map-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+        #map {
+            width: 90%;
+            height: 90%;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1Rz_xGPNYMO7WyP1wYdVzVoMOCO_UUtQ&callback=initMap" async defer></script>
+    <script>
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 10,
+                center: { lat: 0.0, lng: 0.0 }
+            });
+
+            fetch('/api/orders')
+                .then(response => response.json())
+                .then(data => {
+                    var orders = data.Orders;
+                    var locations = data.Locations;
+
+
+                    var lastOrder = orders[orders.length - 1];
+                    var lastLocation = null;
+
+                    locations.forEach(function(location, index) {
+                        var order = orders[index];
+                        var marker = new google.maps.Marker({
+                            position: { lat: location.lat, lng: location.lng },
+                            map: map,
+                            title: order.Name
+                        });
+
+
+                        if (order === lastOrder) {
+                            lastLocation = location;
+                        }
+                    });
+
+                    if (lastLocation !== null) {
+                        map.setCenter({ lat: lastLocation.lat, lng: lastLocation.lng });
+                    } else if (locations.length > 0) {
+                        map.setCenter({ lat: locations[0].lat, lng: locations[0].lng });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    </script>
+</head>
+<body>
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+</body>
+</html>
